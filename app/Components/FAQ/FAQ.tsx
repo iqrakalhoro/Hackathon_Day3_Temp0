@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 
-// Define the FAQ Type
+
 interface FAQItem {
   question: string;
   answer: string;

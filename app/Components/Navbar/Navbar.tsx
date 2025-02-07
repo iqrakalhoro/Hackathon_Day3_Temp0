@@ -8,7 +8,7 @@ import Link from "next/link";
 import { BsBagX } from "react-icons/bs";
 import { IoIosCloseCircle } from "react-icons/io";
 import { usePathname } from "next/navigation";
-import SearchDropdown from "@/app/searchBar/page";
+// import SearchDropdown from "@/app/searchBar/page";
 import { CartContext } from "@/app/context/CartContext";
 // import Wishlist from "@/app/Wishlist/page";
 
@@ -55,7 +55,7 @@ const Navbar = () => {
           <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="text-gray-600 relative">
             <CiSearch className="text-2xl hover:text-[#9F9F9F] cursor-pointer" />
           </button>
-          {isSearchOpen && <SearchDropdown onClose={() => setIsSearchOpen(false)} />}
+          {/* {isSearchOpen && <SearchDropdown onClose={() => setIsSearchOpen(false)} />} */}
           
           
           <button onClick={() => setIsWishlistOpen(true)} className="relative">
