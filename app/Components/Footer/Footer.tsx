@@ -1,3 +1,7 @@
+import Link from "next/link";
+
+
+
 export default function Footer() {
     return (
       
@@ -28,10 +32,10 @@ export default function Footer() {
   
            
               <div>
-                <h4 className="lg:text-lg text-[#9F9F9F] mb-2 sm:text-sm">Help</h4>
+                <Link href="/help" className="lg:text-lg text-[#9F9F9F] mb-2 sm:text-sm"> Help</Link>
                 <ul className="space-y-10 mt-10 lg:text-lg sm:text-sm">
                   <li><a href="#" className="hover:underline">Payment options</a></li>
-                  <li><a href="#" className="hover:underline">Return</a></li>
+                  <Link href="/help/refunds" className="hover:underline">Return</Link>
                   <li><a href="#" className="hover:underline">Privacy Policies</a></li>
                 </ul>
               </div>

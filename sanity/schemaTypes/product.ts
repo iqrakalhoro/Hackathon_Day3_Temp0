@@ -14,11 +14,11 @@ export default {
         type: 'string',
       },
       {
-        name: 'image', // Changed field name to 'image'
+        name: 'image', 
         title: 'Image',
-        type: 'image', // Changed type to 'image'
+        type: 'image',
         options: {
-          hotspot: true, // Enables image cropping in Sanity Studio
+          hotspot: true,
         },
       },
       {

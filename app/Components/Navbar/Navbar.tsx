@@ -1,19 +1,38 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useState, useRef, useEffect } from "react";
 import { CiSearch } from "react-icons/ci";
 import { IoMdHeartEmpty } from "react-icons/io";
 import { HiOutlineShoppingCart } from "react-icons/hi";
 import { TbUserExclamation } from "react-icons/tb";
 import Link from "next/link";
 import { BsBagX } from "react-icons/bs";
-import Image from "next/image";
 import { IoIosCloseCircle } from "react-icons/io";
 import { usePathname } from "next/navigation";
+import SearchDropdown from "@/app/searchBar/page";
+import { CartContext } from "@/app/context/CartContext";
+// import Wishlist from "@/app/Wishlist/page";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const pathName = usePathname();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const {cart} = useContext(CartContext);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <nav className={`${pathName === "/" ? "bg-[#FBEBB5]" : "bg-white"} text-[#000000] lg:p-4`}>
@@ -33,8 +52,17 @@ const Navbar = () => {
           <Link href="/myaccount">
             <TbUserExclamation className="text-2xl hover:text-[#9F9F9F] cursor-pointer" />
           </Link>
-          <CiSearch className="text-2xl hover:text-[#9F9F9F] cursor-pointer" />
-          <IoMdHeartEmpty className="text-2xl hover:text-[#9F9F9F] cursor-pointer" />
+          <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="text-gray-600 relative">
+            <CiSearch className="text-2xl hover:text-[#9F9F9F] cursor-pointer" />
+          </button>
+          {isSearchOpen && <SearchDropdown onClose={() => setIsSearchOpen(false)} />}
+          
+          
+          <button onClick={() => setIsWishlistOpen(true)} className="relative">
+            <IoMdHeartEmpty className="text-2xl hover:text-[#9F9F9F] cursor-pointer" />
+            {/* <Wishlist isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} /> */}
+          </button>
+          
           <button
             onClick={() => setIsCartOpen(true)}
             className="relative flex items-center justify-center px-2 py-[1px]"
@@ -95,27 +123,27 @@ const Navbar = () => {
           </button>
         </div>
         <div className="p-4 flex flex-col h-[70%]">
-     
           <div className="flex-grow overflow-y-auto">
+     {cart && cart.map((product:any)=>
             <div className="flex items-center justify-between pb-2 mb-2">
               <div className="flex items-center">
-                <Image
+                {/* <Image
                   className="bg-[#FBEBB5] rounded-lg"
-                  src="/Asgaard sofa 1.png"
+                  src={product.image}
                   alt="Asgaard sofa"
                   height={90}
                   width={111}
-                />
+                /> */}
                 <div className="p-8">
-                  <p className="font-medium">Asgaard Sofa</p>
+                  <p className="font-medium">{product.productName}</p>
                   <p className="text-lg text-[#000000]">
                     1 <span className="ml-4"> X </span>
-                    <span className="font-medium text-[#B88E2F] ml-4">Rs. 250,000.00</span>
+                    <span className="font-medium text-[#B88E2F] ml-4">Rs {product.price}</span>
                   </p>
                 </div>
               </div>
               <IoIosCloseCircle className="text-[#9F9F9F] h-6 w-6 cursor-pointer" />
-            </div>
+            </div>)}
           </div>
 
 

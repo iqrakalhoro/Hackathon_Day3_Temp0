@@ -1,28 +1,104 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { client } from "@/sanity/lib/client";
 import { BsFillGridFill } from "react-icons/bs";
 import { MdOutlineViewDay } from "react-icons/md";
-import Link from "next/link";
 
-const Shop = () => {
+interface Product {
+  category: string;
+  id: string;
+  type: "product";
+  imagePath: string;
+  price: number;
+  description: string;
+  stockLevel: number;
+  discountPercentage: number;
+  isFeaturedProduct: number;
+  name: string;
+}
+
+const fetchProducts = async (): Promise<Product[]> => {
+  const query = `
+    *[_type == "product"] {
+      category,
+      id,
+      price,
+      description,
+      stockLevel,
+      "imagePath": image.asset->url, // Resolve the image URL
+      discountPercentage,
+      isFeaturedProduct,
+      name
+    }
+  `;
+  return await client.fetch(query);
+};
+
+const Shop: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [sortOption, setSortOption] = useState<string>("default");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(16);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      const data = await fetchProducts();
+      setProducts(data);
+      setFilteredProducts(data);
+
+      // Extract unique categories
+      const uniqueCategories = Array.from(new Set(data.map((p) => p.category)));
+      setCategories(uniqueCategories);
+    };
+
+    loadProducts();
+  }, []);
+
+  // Apply Filters and Sorting
+  useEffect(() => {
+    let updatedProducts = [...products];
+
+    // Filter by Category
+    if (selectedCategory) {
+      updatedProducts = updatedProducts.filter(
+        (product) => product.category === selectedCategory
+      );
+    }
+
+    // Sort by Price
+    if (sortOption === "price-asc") {
+      updatedProducts.sort((a, b) => a.price - b.price);
+    } else if (sortOption === "price-desc") {
+      updatedProducts.sort((a, b) => b.price - a.price);
+    }
+
+    setFilteredProducts(updatedProducts);
+    setCurrentPage(1); // Reset to first page after filtering/sorting
+  }, [selectedCategory, sortOption, products]);
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
   return (
     <div className="bg-white min-h-screen">
-
-    
+      {/* Header Section */}
       <div className="relative w-full h-32 sm:h-64">
-        <Image
-          src="/Group 78.png"
-          alt="Shop Banner"
-          layout="fill"
-          objectFit="cover"
-        />
+        <Image src="/Group 78.png" alt="Shop Banner" layout="fill" objectFit="cover" />
       </div>
 
+      {/* Filter and Sort Section */}
       <div className="bg-[#FAF4F4] px-4 py-6 sm:px-12 lg:px-28 flex flex-wrap justify-between items-center gap-4">
         <div className="flex flex-wrap items-center gap-4">
           <h2 className="text-lg flex items-center gap-2">
-            <svg
+          <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -37,29 +113,53 @@ const Shop = () => {
               />
             </svg>
             Filter
+            <select
+              className="border px-2 py-1 text-[#9F9F9F]"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              <option value="">All</option>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
           </h2>
           <div className="flex items-center gap-4 text-lg">
             <BsFillGridFill />
             <MdOutlineViewDay />
             <div className="hidden sm:block border-l-2 border-[#9F9F9F] pl-4">
-              <p>Showing 1-16 of 32 results</p>
+              <p>Showing {filteredProducts.length} results</p>
             </div>
           </div>
         </div>
 
-        {/* Right Side */}
         <div className="flex flex-wrap items-center gap-4">
+          {/* Category Filter */}
+
+          {/* Items Per Page */}
           <div className="flex items-center gap-2">
             <span>Show:</span>
-            <select className="border px-2 py-1 text-[#9F9F9F]">
+            <select
+              className="border px-2 py-1 text-[#9F9F9F]"
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            >
               <option value="16">16</option>
               <option value="32">32</option>
               <option value="48">48</option>
             </select>
           </div>
+
+          {/* Sorting */}
           <div className="flex items-center gap-2">
             <span>Sort by:</span>
-            <select className="border px-2 py-1 text-[#9F9F9F]">
+            <select
+              className="border px-2 py-1 text-[#9F9F9F]"
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+            >
               <option value="default">Default</option>
               <option value="price-asc">Price: Low to High</option>
               <option value="price-desc">Price: High to Low</option>
@@ -68,290 +168,60 @@ const Shop = () => {
         </div>
       </div>
 
-     
-<div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-  <Link href="/singleproduct/1">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic1.png"
-        alt="Trenton modular sofa_3"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Trenton modular sofa_3
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-
-  <Link href="/singleproduct/2">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic2.png"
-        alt="Granite dining table with dining chair"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-        Granite dining table with dining chair
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-
-  <Link href="/singleproduct/3">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic3.png"
-        alt="Outdoor bar table and stool"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-        Outdoor bar table and stool
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic4.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-        Plain console with teak mirror
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic5.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Grain coffee table
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic6.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Kent coffee table
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic7.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Round coffee table_color 2
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic8.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Reclaimed teak coffee table
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic9.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Plain console_
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic10.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Reclaimed teak Sideboard
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic11.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      SJP_0825 
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic12.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Bella chair and table
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic13.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Granite square side table
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic14.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Asgaard sofa
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic15.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Maya sofa three seater
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-  <Link href="/singleproduct/4">
-    <div className="bg-white p-4 text-center hover:shadow-lg">
-      <Image
-        src="/Pic16.png"
-        alt="Plain console with teak mirror"
-        width={200}
-        height={200}
-        className="w-full h-40 object-cover rounded-md"
-      />
-      <h3 className="text-sm font-medium text-gray-700 mt-2">
-      Outdoor sofa set
-      </h3>
-      <p className="text-lg font-bold text-gray-900">Rs. 25,000.00</p>
-    </div>
-  </Link>
-
-</div>
-
-      <div className="flex flex-wrap justify-center items-center gap-4 py-6">
-        {[1, 2, 3].map((page) => (
-          <button
-            key={page}
-            className="px-4 py-2 bg-[#FFF9E5] text-[#000000] rounded hover:bg-[#FBEBB5]"
-          >
-            {page}
-          </button>
-        ))}
-        <button className="px-4 py-2 bg-[#FFF9E5] text-[#000000] rounded hover:bg-[#FBEBB5]">
-          Next
-        </button>
+      {/* Products Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+        {currentProducts.length > 0 ? (
+          currentProducts.map((product) => (
+            <Link key={product.id} href={`/Product/${product.id}`}>
+              <div className="bg-white p-4 text-center hover:shadow-lg">
+                <Image
+                  src={product.imagePath || "/placeholder.png"}
+                  alt={product.name}
+                  width={600}
+                  height={1200}
+                  className="w-full h-80 object-cover rounded-md"
+                />
+                <h3 className="text-sm font-medium text-[#9F9F9F] mt-2">{product.name}</h3>
+                <p className="text-lg font-bold text-[#000000]">
+                  Rs. {product.price.toLocaleString("en-IN")}
+                </p>
+              </div>
+            </Link>
+          ))
+        ) : (
+          <p className="text-center col-span-4 py-4 text-gray-600">No products found.</p>
+        )}
       </div>
 
-      {/* Delivery Section */}
-      <div className="bg-[#FAF4F4] px-4 py-12 sm:px-12 lg:px-24 lg:h-72 lg:p-24">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="text-start">
-            <h3 className="text-xl lg:text-2xl mb-2">Free Delivery</h3>
-            <p className="text-sm text-[#9F9F9F]">
-              For all orders over $50, consectetur adipiscing elit.
-            </p>
-          </div>
-          <div className="text-start">
-            <h3 className="text-xl lg:text-2xl mb-2">90 Days Return</h3>
-            <p className="text-sm text-[#9F9F9F]">
-              If goods have problems, consectetur adipiscing elit.
-            </p>
-          </div>
-          <div className="text-start">
-            <h3 className="text-xl lg:text-2xl mb-2">Secure Payment</h3>
-            <p className="text-sm text-[#9F9F9F]">
-              100% secure payment, consectetur adipiscing elit.
-            </p>
-          </div>
-        </div>
+      {/* Pagination Controls */}
+      <div className="flex justify-center py-6 gap-2">
+        <button
+          className="px-4 py-2 border rounded-md hover:bg-[#FAF4F4]"
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          Prev
+        </button>
+
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index}
+            className={`px-4 py-2 border rounded-md hover:bg-[#FAF4F4] ${
+              currentPage === index + 1 ? "hover:bg-[#FAF4F4]" : ""
+            }`}
+            onClick={() => setCurrentPage(index + 1)}
+          >
+            {index + 1} 
+          </button>
+        ))}
+
+        <button
+          className="px-4 py-2 border rounded-md hover:bg-[#FAF4F4]"
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

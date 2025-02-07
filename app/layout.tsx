@@ -3,12 +3,14 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import Footer from "./Components/Footer/Footer";
 import Navbar from "./Components/Navbar/Navbar";
+import { CartProvider } from "./context/CartContext";
+// import { WishlistProvider } from "./context2/WishlistContext";
 
-const myfont = Poppins ({
+const myfont = Poppins({
   subsets: ["latin"],
-  weight: ["400" , "700"]
+  weight: ["400", "700"],
+  display: "swap",
 });
-
 
 export const metadata: Metadata = {
   title: "Ecommerce Desktop Website",
@@ -22,13 +24,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={myfont.className}
-    
-      >
-        <Navbar/>
-        {children}
-        <Footer/>
+      <body className={myfont.className}>
+        <Navbar />
+        <CartProvider>
+        {children}</CartProvider>
+        <Footer />
       </body>
     </html>
   );
