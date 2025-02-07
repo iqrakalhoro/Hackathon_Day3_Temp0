@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import FAQ from "../Components/FAQ/FAQ"; // Import the FAQ Component
+import FAQ from "../Components/FAQ/FAQ"; 
 
 const HelpCenter = () => {
   return (

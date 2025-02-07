@@ -6,7 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { AiOutlineSearch, AiOutlineClose } from "react-icons/ai";
 
-// Product Interface
 interface Product {
   id: string;
   name: string;
@@ -15,10 +14,10 @@ interface Product {
 }
 
 type SearchDropdownProps = {
-  onClose: () => void; // ✅ Explicitly define the type
+  onClose: () => void; 
 };
 
-// Function to Fetch Products from Sanity
+
 const fetchProducts = async (): Promise<Product[]> => {
   const query = `*[_type == "product"] {
     id,
@@ -34,7 +33,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onClose }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  // Load products when dropdown opens
+  
   useEffect(() => {
     const loadProducts = async () => {
       const data = await fetchProducts();
@@ -43,7 +42,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onClose }) => {
     loadProducts();
   }, []);
 
-  // Handle Search
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
@@ -53,7 +52,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onClose }) => {
       return;
     }
 
-    // Filter products
+
     const filtered = products.filter((product) =>
       product.name.toLowerCase().includes(query)
     );
@@ -62,7 +61,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onClose }) => {
 
   return (
     <div className="absolute top-12 right-0 w-72 bg-white border border-gray-300 rounded-md shadow-lg p-4 z-50">
-      {/* Search Input */}
+    
       <div className="flex items-center border border-gray-300 rounded-md p-2">
         <AiOutlineSearch size={20} className="text-gray-500" />
         <input
@@ -78,7 +77,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onClose }) => {
         </button>
       </div>
 
-      {/* Search Results */}
+
       <div className="mt-4 max-h-60 overflow-y-auto">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
